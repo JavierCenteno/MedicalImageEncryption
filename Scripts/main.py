@@ -13,7 +13,7 @@ Bibliographic code: 2015CNSNS..24...98K
 
 import imageutil
 
-image = imageutil.load_image("../Test/mri1.jpg")
-mask = imageutil.divide_regions(image, 10, 0.5)
+image = imageutil.load_image("../Test/mri2.jpg")
+mask = imageutil.divide_regions(image, 4, 3)
 
 imageutil.save_mask(mask, "../Test/mask.png")

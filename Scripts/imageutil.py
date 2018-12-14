@@ -65,15 +65,12 @@ def divide_regions(image, block_size, threshold):
 		True if this submatrix can be considered part of the region of interest
 		using threshold as a threshold, False otherwise.
 	"""
+
 	s = block_size
+	width = len(image[0]) // block_size
+	height = len(image) // block_size
 
-	width = len(image)
-	height = len(image[0])
-
-	mask = numpy.empty([height // block_size, width // block_size])
-
-	width = len(mask)
-	height = len(mask[0])
+	mask = numpy.empty([height, width])
 
 	for i in range(width):
 		for j in range(height):
