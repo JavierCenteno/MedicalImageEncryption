@@ -8,7 +8,6 @@ Utilities for working with images.
 """
 
 import numpy
-from PIL import Image
 from scipy import misc
 
 def load_image(image_path):
@@ -29,7 +28,7 @@ def load_image(image_path):
 	return misc.imread(image_path)
 
 def classification_metric(submatrix, tau):
-	return numpy.mean(numpy.std(submatrix)) > tau
+	return numpy.std(submatrix)> tau
 
 def divide_regions(img, s, tau):
 	width = len(img)
@@ -42,12 +41,12 @@ def divide_regions(img, s, tau):
 
 	for i in range(width):
 		for j in range(height):
-			mask[i][j] = classification_metric(numpy.ix_([i*s, (i+1)*s], [j*s, (j+1)*s]), tau)
+			mask[j][i] = classification_metric(img[j*s:(j+1)*s, i*s:(i+1)*s], tau)
 
 	return mask
 
 def save_image(mask, path):
-	Image.fromarray(mask, mode="RGB").save(path)
+	misc.toimage(mask).save(path)
 
 def save_mask(mask, path):
-	Image.fromarray(mask, mode="L").save(path)
+	misc.toimage(mask).save(path)
