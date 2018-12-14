@@ -8,7 +8,7 @@ Utilities for working with images.
 """
 
 import numpy
-import PIL
+from PIL import Image
 
 def load_image(image_path):
 	"""
@@ -23,8 +23,27 @@ def load_image(image_path):
             A tridimensional array of the values of the channels of the pixels 
             of an image that can be accessed by the x index, y index and
             channel index of the value in that order.
-        """
-    image = PIL.Image.open(image_path);
-    (width, height) = image.size
-    return numpy.array(list(image.getdata())).reshape((height, width, 3))
+    """
 
+	image = Image.open(image_path)
+	(width, height) = image.size
+
+	return numpy.array(list(image.getdata())).reshape((height, width, 3))
+
+def classification_metric(submatrix):
+	return False
+
+def divide_regions(img, s, tau):
+	width = len(img)
+	height = len(img[0])
+
+	mask = numpy.empty([height // s, width // s])
+
+	width = len(mask)
+	height = len(mask[0])
+
+	for i in range(width):
+		for j in range(height):
+			mask[i][j] = classification_metric(numpy.ix_([i*s, (i+1)*s], [j*s, (j+1)*s]))
+
+	return mask

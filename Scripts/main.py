@@ -14,3 +14,6 @@ Bibliographic code: 2015CNSNS..24...98K
 import imageutil
 
 image = imageutil.load_image("../Test/mri1.jpg")
+mask = imageutil.divide_regions(image, 8, 0.5)
+
+print(mask)
