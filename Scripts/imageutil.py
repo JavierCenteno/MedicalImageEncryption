@@ -30,8 +30,8 @@ def load_image(image_path):
 
 	return numpy.array(list(image.getdata())).reshape((height, width, 3))
 
-def classification_metric(submatrix):
-	return False
+def classification_metric(submatrix, tau):
+	return numpy.mean(numpy.std(submatrix)) > tau
 
 def divide_regions(img, s, tau):
 	width = len(img)
@@ -44,6 +44,6 @@ def divide_regions(img, s, tau):
 
 	for i in range(width):
 		for j in range(height):
-			mask[i][j] = classification_metric(numpy.ix_([i*s, (i+1)*s], [j*s, (j+1)*s]))
+			mask[i][j] = classification_metric(numpy.ix_([i*s, (i+1)*s], [j*s, (j+1)*s]), tau)
 
 	return mask
