@@ -10,38 +10,74 @@ Utilities for working with images.
 import numpy
 from scipy import misc
 
-def load_image(image_path):
+def load_image(path):
 	"""
-        Parameters
-        ----------
-        image_path : str
-            Path to an image file.
+	Parameters
+	----------
+	path : str
+		A file path to read an image from.
+	
+	Returns
+	-------
+	numpy.ndarray
+		A tridimensional array of the values of the channels of the pixels of
+		an image that can be accessed by the x index, y index and channel index
+		of the value in that order.
+	"""
+	return misc.imread(path)
 
-        Returns
-        -------
-        numpy.ndarray
-            A tridimensional array of the values of the channels of the pixels 
-            of an image that can be accessed by the x index, y index and
-            channel index of the value in that order.
-    """
+def classification_metric(submatrix, threshold):
+	"""
+	Parameters
+	----------
+	submatrix : array_like
+		A section of a matrix.
+	threshold : float
+		The threshold of the minimal standard deviation required to consider
+		submatrix as part of the region of interest.
+	
+	Returns
+	-------
+	boolean
+		True if this submatrix can be considered part of the region of interest
+		using threshold as a threshold, False otherwise.
+	"""
+	return numpy.std(submatrix) > threshold
 
-	return misc.imread(image_path)
+def divide_regions(image, block_size, threshold):
+	"""
+	Parameters
+	----------
+	image : array_like
+		An image represented as a tridimensional array of the values of the
+		channels of its pixels that can be accessed by the x index, y index and
+		channel index of the value in that order.
+	block_size : int
+		The value used for the width and height of the sections this image will
+		be divided in.
+	threshold : float
+		The threshold of the minimal standard deviation required to consider
+		a section of the image as part of the region of interest.
+	
+	Returns
+	-------
+	boolean
+		True if this submatrix can be considered part of the region of interest
+		using threshold as a threshold, False otherwise.
+	"""
+	s = block_size
 
-def classification_metric(submatrix, tau):
-	return numpy.std(submatrix)> tau
+	width = len(image)
+	height = len(image[0])
 
-def divide_regions(img, s, tau):
-	width = len(img)
-	height = len(img[0])
-
-	mask = numpy.empty([height // s, width // s])
+	mask = numpy.empty([height // block_size, width // block_size])
 
 	width = len(mask)
 	height = len(mask[0])
 
 	for i in range(width):
 		for j in range(height):
-			mask[j][i] = classification_metric(img[j*s:(j+1)*s, i*s:(i+1)*s], tau)
+			mask[j][i] = classification_metric(image[j*s:(j+1)*s, i*s:(i+1)*s], threshold)
 
 	return mask
 
