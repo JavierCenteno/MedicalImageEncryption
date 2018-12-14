@@ -26,23 +26,49 @@ def load_image(path):
 	"""
 	return misc.imread(path)
 
-def classification_metric(submatrix, threshold):
+def save_image(image, path):
 	"""
 	Parameters
 	----------
-	submatrix : array_like
+	path : str
+		A file path to save the image to.
+	image : array_like
+		An image represented as a tridimensional array of the values of the
+		channels of its pixels that can be accessed by the x index, y index and
+		channel index of the value in that order.
+	"""
+	misc.toimage(image).save(path)
+
+def save_mask(mask, path):
+	"""
+	Parameters
+	----------
+	path : str
+		A file path to save the image to.
+	mask : array_like
+		An image represented as a tridimensional array of the values of the
+		channels of its pixels that can be accessed by the x index, y index and
+		channel index of the value in that order.
+	"""
+	misc.toimage(mask).save(path)
+
+def classification_metric(block, threshold):
+	"""
+	Parameters
+	----------
+	block : array_like
 		A section of a matrix.
 	threshold : float
 		The threshold of the minimal standard deviation required to consider
-		submatrix as part of the region of interest.
+		block as part of the region of interest.
 	
 	Returns
 	-------
 	boolean
-		True if this submatrix can be considered part of the region of interest
+		True if this block can be considered part of the region of interest
 		using threshold as a threshold, False otherwise.
 	"""
-	return numpy.std(submatrix) > threshold
+	return numpy.std(block) > threshold
 
 def divide_regions(image, block_size, threshold):
 	"""
@@ -61,28 +87,20 @@ def divide_regions(image, block_size, threshold):
 	
 	Returns
 	-------
-	boolean
-		True if this submatrix can be considered part of the region of interest
-		using threshold as a threshold, False otherwise.
+	mask : numpy.ndarray
+	A two dimensional array containing 1 if the indices correspond to a	block
+	in the region of interest and 0 otherwise.
 	"""
-	s = block_size
+	image_width = len(image)
+	image_height = len(image[0])
 
-	width = len(image)
-	height = len(image[0])
+	mask = numpy.empty([image_height // block_size, image_width // block_size])
 
-	mask = numpy.empty([height // block_size, width // block_size])
+	mask_width = len(mask)
+	mask_height = len(mask[0])
 
-	width = len(mask)
-	height = len(mask[0])
-
-	for i in range(width):
-		for j in range(height):
-			mask[j][i] = classification_metric(image[j*s:(j+1)*s, i*s:(i+1)*s], threshold)
-
+	for i in range(mask_width):
+		for j in range(mask_height):
+			block = image[j*block_size:(j+1)*block_size, i*block_size:(i+1)*block_size]
+			mask[j][i] = classification_metric(block, threshold)
 	return mask
-
-def save_image(mask, path):
-	misc.toimage(mask).save(path)
-
-def save_mask(mask, path):
-	misc.toimage(mask).save(path)
