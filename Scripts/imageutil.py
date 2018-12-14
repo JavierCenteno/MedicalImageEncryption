@@ -9,6 +9,7 @@ Utilities for working with images.
 
 import numpy
 from PIL import Image
+from scipy import misc
 
 def load_image(image_path):
 	"""
@@ -25,10 +26,7 @@ def load_image(image_path):
             channel index of the value in that order.
     """
 
-	image = Image.open(image_path)
-	(width, height) = image.size
-
-	return numpy.array(list(image.getdata())).reshape((height, width, 3))
+	return misc.imread(image_path)
 
 def classification_metric(submatrix, tau):
 	return numpy.mean(numpy.std(submatrix)) > tau
@@ -47,3 +45,9 @@ def divide_regions(img, s, tau):
 			mask[i][j] = classification_metric(numpy.ix_([i*s, (i+1)*s], [j*s, (j+1)*s]), tau)
 
 	return mask
+
+def save_image(mask, path):
+	Image.fromarray(mask, mode="RGB").save(path)
+
+def save_mask(mask, path):
+	Image.fromarray(mask, mode="L").save(path)
