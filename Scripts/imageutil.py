@@ -88,8 +88,8 @@ def divide_regions(image, block_size, threshold):
 	Returns
 	-------
 	mask : numpy.ndarray
-	A two dimensional array containing 1 if the indices correspond to a	block
-	in the region of interest and 0 otherwise.
+		A two dimensional array containing 1 if the indices correspond to a
+		block in the region of interest and 0 otherwise.
 	"""
 	s = block_size
 	width = len(image[0]) // block_size
