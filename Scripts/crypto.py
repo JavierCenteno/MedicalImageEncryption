@@ -1,24 +1,20 @@
+# -*- coding: utf-8 -*-
+"""
+Implementation of an efficient and robust image encryption scheme for medical
+applications, as described by A. Kanso and M. Ghebleh.
+
+DOI: 10.1016/j.cnsns.2014.12.005
+Bibliographic code: 2015CNSNS..24...98K
+
+@author: Javier Castillo Delgado
+@author: Javier Centeno Vega
+@author: Manuel Macho Becerra
+"""
+
 import numpy
 import math
-
-#OPERACIONES DE BITS
-def first_num(n):
-	mask = 0b11111111000000000000000000000000
-	return (n & mask) >> 24
-
-def second_num(n):
-	mask = 0b00000000111111110000000000000000
-	return (n & mask) >> 16
-
-def third_num(n):
-	mask = 0b00000000000000001111111100000000
-	return (n & mask) >> 8
-
-def fourth_num(n):
-	mask = 0b00000000000000000000000011111111
-	return n & mask
-
-#MATRICES
+from matrixutil import vector
+from byteutil import to_bytes
 
 def a_matrix(a, b, c, d):
 	return numpy.array(
@@ -29,9 +25,6 @@ def a_matrix(a, b, c, d):
 				[c*(b + 1)*(d + 1) + d, b + 1, b*c + c + 1, 2*b + 2]
 			]
 		)
-
-def vector(*a):
-	return numpy.atleast_2d(numpy.array([*a]))
 
 def omega_matrix(a, x, h, w):
 	l = h*w
@@ -46,10 +39,7 @@ def omega_matrix(a, x, h, w):
 
 		n = (numpy.floor(x * (2**32))).T
 
-		y.append(vector(first_num(numpy.int64(n)),
-						second_num(numpy.int64(n)),
-						third_num(numpy.int64(n)),
-						fourth_num(numpy.int64(n))))
+		y.append(vector(to_bytes(numpy.uint32(n), 4)))
 
 	return numpy.reshape(y, [h, w])
 
