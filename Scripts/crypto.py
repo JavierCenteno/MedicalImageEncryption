@@ -133,3 +133,17 @@ def shuffle(i, omega, l, a1, x1, a2, x2):
 
 	return i, omega
 
+def block_shuffle(image, mask, omega, a1, x1, a2, x2):
+	s = len(image) // len(mask)
+	res = numpy.zeros_like(image)
+
+	for i in range(len(mask[0])):
+		for j in range(len(mask)):
+			if not mask[j][i]:
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = image[j*s:(j+1)*s, i*s:(i+1)*s]
+
+			else:
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = shuffle(image[j*s:(j+1)*s, i*s:(i+1)*s], 
+														omega, s, a1, x1, a2, x2)[0]
+
+	return res

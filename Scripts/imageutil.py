@@ -39,19 +39,6 @@ def save_image(image, path):
 	"""
 	misc.toimage(image).save(path)
 
-def save_mask(mask, path):
-	"""
-	Parameters
-	----------
-	path : str
-		A file path to save the image to.
-	mask : array_like
-		An image represented as a tridimensional array of the values of the
-		channels of its pixels that can be accessed by the x index, y index and
-		channel index of the value in that order.
-	"""
-	misc.toimage(mask).save(path)
-
 def classification_metric(block, threshold):
 	"""
 	Parameters
