@@ -11,8 +11,8 @@ import imageutil
 import matrixutil
 import crypto
 
-image = imageutil.load_image("../Test/mri2.jpg")
-mask = imageutil.divide_regions(image, 10, 3)
+image = imageutil.load_image("../Test/mri3.jpg")
+mask = imageutil.divide_regions(image, 50, 3)
 imageutil.save_image(mask, "../Test/mask.png")
 
 a = crypto.a_matrix(2, 1, 2, 2)

@@ -125,9 +125,11 @@ def shuffle(i, omega, l, a1, x1, a2, x2):
 	s1 = shuffling_sequence(a1, x1, l)
 	s2 = shuffling_sequence(a2, x2, l)
 
-	i = numpy.array([i[1] for i in sorted(enumerate(i.T), key = lambda x : s1[0][x[0]])]).T
-	omega = numpy.array([i[1] for i in sorted(enumerate(omega.T), key = lambda x : s1[1][x[0]])]).T
+	#Shuffling de columnas
+	i = numpy.array([[i[1] for i in sorted(enumerate(j), key = lambda x : s1[0][x[0]])] for j in i])
+	omega = numpy.array([[i[1] for i in sorted(enumerate(j), key = lambda x : s1[0][x[0]])] for j in omega])
 
+	#Shuffling de filas
 	i = numpy.array([i[1] for i in sorted(enumerate(i), key = lambda x : s2[0][x[0]])])
 	omega = numpy.array([i[1] for i in sorted(enumerate(omega), key = lambda x : s2[1][x[0]])])
 
