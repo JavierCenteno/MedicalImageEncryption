@@ -98,4 +98,4 @@ def omega_matrix(a, x, height, width):
 
 		y.append(vector(to_bytes(numpy.uint32(n), 4)))
 
-	return numpy.reshape(y, [height, width])
+	return numpy.reshape(numpy.reshape(numpy.array(y), [math.ceil(l/16.0)*16])[:l], [height, width])
