@@ -64,7 +64,8 @@ def a_matrix(a, b, c, d):
 			]
 		)
 
-u = vector(2, 3, 5, 1)
+def cat_map(a, b):
+	return numpy.array([[1, a], [b, a*b + 1]])
 
 def omega_matrix(a, x, height, width):
 	"""
@@ -87,6 +88,7 @@ def omega_matrix(a, x, height, width):
 	"""
 	l = height*width
 	y = []
+	u = vector(2, 3, 5, 1)
 
 	for i in range(math.ceil(l/16.0)):
 		t = math.floor(numpy.dot(u, x)[0][0]) + 1
@@ -99,3 +101,35 @@ def omega_matrix(a, x, height, width):
 		y.append(vector(to_bytes(numpy.uint32(n), 4)))
 
 	return numpy.reshape(numpy.reshape(numpy.array(y), [math.ceil(l/16.0)*16])[:l], [height, width])
+
+def shuffling_sequence(a, x, n):
+	r1 = []
+	r2 = []
+	u = vector(2, 3)
+
+	for i in range(n):
+		t = math.floor(numpy.dot(u, x)[0][0]) + 1
+
+		for j in range(t):
+			x = a.dot(x) % 1
+
+		r1.append(x[0][0])
+		r2.append(x[1][0])
+
+	r1 = [i[0] for i in sorted(enumerate(r1), key = lambda x : x[1])]
+	r2 = [i[0] for i in sorted(enumerate(r2), key = lambda x : x[1])]
+
+	return r1, r2
+
+def shuffle(i, omega, l, a1, x1, a2, x2):
+	s1 = shuffling_sequence(a1, x1, l)
+	s2 = shuffling_sequence(a2, x2, l)
+
+	i = numpy.array([i[1] for i in sorted(enumerate(i.T), key = lambda x : s1[0][x[0]])]).T
+	omega = numpy.array([i[1] for i in sorted(enumerate(omega.T), key = lambda x : s1[1][x[0]])]).T
+
+	i = numpy.array([i[1] for i in sorted(enumerate(i), key = lambda x : s2[0][x[0]])])
+	omega = numpy.array([i[1] for i in sorted(enumerate(omega), key = lambda x : s2[1][x[0]])])
+
+	return i, omega
+

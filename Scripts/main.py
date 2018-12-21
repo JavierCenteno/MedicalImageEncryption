@@ -15,5 +15,13 @@ import crypto
 #mask = imageutil.divide_regions(image, 4, 3)
 #imageutil.save_mask(mask, "../Test/mask.png")
 
-omega = crypto.omega_matrix(crypto.a_matrix(2, 1, 2, 2), matrixutil.vector(0.6, 0.2, 0.8, 0.6).T, 10, 10)
-print(omega)
+a = crypto.a_matrix(2, 1, 2, 2)
+n = [4, 4]
+
+omega = crypto.omega_matrix(a, matrixutil.vector(0.6, 0.2, 0.8, 0.6).T, *n)
+psi = crypto.omega_matrix(a, matrixutil.vector(0.7, 0.1, 0.9, 0.2).T, *n)
+
+print(crypto.shuffle(a, omega, 4, 
+	crypto.cat_map(2, 1), matrixutil.vector(0.9, 0.72).T, 
+	crypto.cat_map(3, 2), matrixutil.vector(0.235, 0.821).T))
+
