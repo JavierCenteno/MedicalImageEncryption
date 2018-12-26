@@ -65,7 +65,32 @@ def a_matrix(a, b, c, d):
 		)
 
 def cat_map(a, b):
-	return numpy.array([[1, a], [b, a*b + 1]])
+	"""
+	Parameters
+	----------
+	a : int
+		A parameter used to generate the matrix.
+	b : int
+		A parameter used to generate the matrix.
+	
+	Returns
+	-------
+	a : numpy.ndarray
+		A two dimensional matrix with dimensions (2, 2) used to generate the cat
+		map in the shuffling phase of the encryption algorithm.
+	"""
+	return numpy.array(
+			[
+				[
+					1,
+					a
+				],
+				[
+					b,
+					a*b + 1
+				]
+			]
+		)
 
 def omega_matrix(a, x, height, width):
 	"""
@@ -106,6 +131,21 @@ def omega_matrix(a, x, height, width):
 		numpy.reshape(numpy.array(y), [math.ceil(l/16.0)*4]))
 
 def shuffling_sequence(a, x, n):
+	"""
+	Parameters
+	----------
+	a : numpy.ndarray
+		A matrix used to compute the cat map transformation.
+	x : numpy.ndarray
+		A column vector on which the cat map transformation is applied.
+	n : int
+		The number of times the cat map transformation is iterated.
+	
+	Returns
+	-------
+	tuple
+		The components of the result of the repeated cat map transformation.
+	"""
 	r1 = []
 	r2 = []
 	u = vector(2, 3)
@@ -125,6 +165,35 @@ def shuffling_sequence(a, x, n):
 	return r1, r2
 
 def shuffle(i, omega, l, a1, x1, a2, x2):
+	"""
+	Parameters
+	----------
+	i : numpy.ndarray
+		A block of an image.
+	omega : numpy.ndarray
+		The omega matrix used in the encryption algorithm.
+	l : int
+		The number of times the cat map transformation is iterated in the
+		shuffling sequence.
+	a1 : numpy.ndarray
+		A matrix used to compute the cat map transformation used in column
+		shuffling.
+	x1 : numpy.ndarray
+		A column vector on which the cat map transformation is applied used in
+		column shuffling.
+	a2 : numpy.ndarray
+		A matrix used to compute the cat map transformation used in row
+		shuffling.
+	x2 : numpy.ndarray
+		A column vector on which the cat map transformation is applied used in
+		row shuffling.
+	
+	Returns
+	-------
+	tuple
+		A tuple consisting of the result of shuffling the given block and the
+		omega matrix.
+	"""
 	s1 = shuffling_sequence(a1, x1, l)
 	s2 = shuffling_sequence(a2, x2, l)
 
@@ -167,6 +236,34 @@ def mask(i, omega, l, y):
 	return i
 
 def block_shuffle(image, mask, omega, a1, x1, a2, x2):
+	"""
+	Parameters
+	----------
+	image : numpy.ndarray
+		An image.
+	mask : numpy.ndarray
+		The mask defining the region of interest of the image as computed by
+		divide_regions.
+	omega : numpy.ndarray
+		The omega matrix used in the encryption algorithm.
+	a1 : numpy.ndarray
+		A matrix used to compute the cat map transformation used in column
+		shuffling.
+	x1 : numpy.ndarray
+		A column vector on which the cat map transformation is applied used in
+		column shuffling.
+	a2 : numpy.ndarray
+		A matrix used to compute the cat map transformation used in row
+		shuffling.
+	x2 : numpy.ndarray
+		A column vector on which the cat map transformation is applied used in
+		row shuffling.
+	
+	Returns
+	-------
+	numpy.ndarray
+		The result of shuffling the image.
+	"""
 	s = len(image) // len(mask)
 	res = numpy.zeros_like(image)
 
