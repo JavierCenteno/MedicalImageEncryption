@@ -88,6 +88,7 @@ def omega_matrix(a, x, height, width):
 	"""
 	l = height*width
 	y = []
+	z = []
 	u = vector(2, 3, 5, 1)
 
 	for i in range(math.ceil(l/16.0)):
@@ -98,9 +99,11 @@ def omega_matrix(a, x, height, width):
 
 		n = (numpy.floor(x * (2**32))).T
 
-		y.append(vector(to_bytes(numpy.uint32(n), 4)))
+		y.append(x)
+		z.append(vector(to_bytes(numpy.uint32(n), 4)))
 
-	return numpy.reshape(numpy.reshape(numpy.array(y), [math.ceil(l/16.0)*16])[:l], [height, width])
+	return (numpy.reshape(numpy.reshape(numpy.array(z), [math.ceil(l/16.0)*16])[:l], [height, width]), 
+		numpy.reshape(numpy.array(y), [math.ceil(l/16.0)*4]))
 
 def shuffling_sequence(a, x, n):
 	r1 = []
@@ -127,13 +130,41 @@ def shuffle(i, omega, l, a1, x1, a2, x2):
 
 	#Shuffling de columnas
 	i = numpy.array([[i[1] for i in sorted(enumerate(j), key = lambda x : s1[0][x[0]])] for j in i])
-	omega = numpy.array([[i[1] for i in sorted(enumerate(j), key = lambda x : s1[0][x[0]])] for j in omega])
+	omega = numpy.array([[i[1] for i in sorted(enumerate(j), key = lambda x : s1[1][x[0]])] for j in omega])
 
 	#Shuffling de filas
 	i = numpy.array([i[1] for i in sorted(enumerate(i), key = lambda x : s2[0][x[0]])])
 	omega = numpy.array([i[1] for i in sorted(enumerate(omega), key = lambda x : s2[1][x[0]])])
 
 	return i, omega
+
+def unshuffle(i, omega, l, a1, x1, a2, x2):
+	s1 = shuffling_sequence(a1, x1, l)
+	s2 = shuffling_sequence(a2, x2, l)
+
+	#Shuffling de columnas
+	i = numpy.array([[i[1] for i in sorted(zip(numpy.argsort(s1[0]), j), key = lambda x : x[0])] for j in i])
+	omega = numpy.array([[i[1] for i in sorted(zip(numpy.argsort(s1[1]), j), key = lambda x : x[0])] for j in omega])
+
+	#Shuffling de filas
+	i = numpy.array([i[1] for i in sorted(zip(numpy.argsort(s2[0]), i), key = lambda x : x[0])])
+	omega = numpy.array([i[1] for i in sorted(zip(numpy.argsort(s2[1]), i), key = lambda x : x[0])])
+
+	return i, omega
+
+def mask(i, omega, l, y):
+	p = 1
+
+	for j in range(l):
+		o = 1 + (omega.T[j].dot(numpy.array([numpy.product(i) for i in numpy.transpose(i, (1, 0, 2))])) % math.floor((l*l)/4))
+		numpy.roll(omega.T[j], -p)
+		p = 1 + math.floor(l*y[o])
+
+		for k in range(l):
+			i[k][j] = (i[k][j] + omega[j][k]) % 256
+
+
+	return i
 
 def block_shuffle(image, mask, omega, a1, x1, a2, x2):
 	s = len(image) // len(mask)
@@ -147,5 +178,34 @@ def block_shuffle(image, mask, omega, a1, x1, a2, x2):
 			else:
 				res[j*s:(j+1)*s, i*s:(i+1)*s] = shuffle(image[j*s:(j+1)*s, i*s:(i+1)*s], 
 														omega, s, a1, x1, a2, x2)[0]
+
+	return res
+
+def block_unshuffle(image, mask, omega, a1, x1, a2, x2):
+	s = len(image) // len(mask)
+	res = numpy.zeros_like(image)
+
+	for i in range(len(mask[0])):
+		for j in range(len(mask)):
+			if not mask[j][i]:
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = image[j*s:(j+1)*s, i*s:(i+1)*s]
+
+			else:
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = unshuffle(image[j*s:(j+1)*s, i*s:(i+1)*s], 
+														omega, s, a1, x1, a2, x2)[0]
+
+	return res
+
+def block_mask(image, _mask, omega, y):
+	s = len(image) // len(_mask)
+	res = numpy.zeros_like(image)
+
+	for i in range(len(_mask[0])):
+		for j in range(len(_mask)):
+			if not _mask[j][i]:
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = image[j*s:(j+1)*s, i*s:(i+1)*s]
+
+			else:
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = mask(image[j*s:(j+1)*s, i*s:(i+1)*s], omega, s, y)
 
 	return res
