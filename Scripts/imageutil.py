@@ -8,7 +8,7 @@ Utilities for working with images.
 """
 
 import numpy
-from scipy import misc
+from PIL import Image
 
 def load_image(path):
 	"""
@@ -24,7 +24,7 @@ def load_image(path):
 		an image that can be accessed by the x index, y index and channel index
 		of the value in that order.
 	"""
-	return misc.imread(path)
+	return numpy.array(Image.open(path).convert("RGB"))
 
 def save_image(image, path):
 	"""
@@ -37,7 +37,7 @@ def save_image(image, path):
 		channels of its pixels that can be accessed by the x index, y index and
 		channel index of the value in that order.
 	"""
-	misc.toimage(image).save(path)
+	Image.fromarray(image, "RGB").save(path)
 
 def classification_metric(block, threshold):
 	"""
