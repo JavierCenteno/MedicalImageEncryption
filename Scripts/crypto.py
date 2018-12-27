@@ -21,13 +21,13 @@ def a_matrix(a, b, c, d):
 	Parameters
 	----------
 	a : int
-		A parameter used to fill in the matrix.
+		A parameter used to generate the matrix.
 	b : int
-		A parameter used to fill in the matrix.
+		A parameter used to generate the matrix.
 	c : int
-		A parameter used to fill in the matrix.
+		A parameter used to generate the matrix.
 	d : int
-		A parameter used to fill in the matrix.
+		A parameter used to generate the matrix.
 	
 	Returns
 	-------
@@ -107,9 +107,9 @@ def omega_matrix(a, x, height, width):
 	
 	Returns
 	-------
-	numpy.ndarray
-		A two dimensional matrix representing the omega matrix used in the
-		encryption algorithm.
+	tuple
+		A tuple consisting of the omega and y matrices used in the encryption
+		algorithm.
 	"""
 	l = height*width
 	y = []
@@ -164,7 +164,7 @@ def shuffling_sequence(a, x, n):
 
 	return r1, r2
 
-def shuffle(i, omega, l, a1, x1, a2, x2):
+def shuffle_block(i, omega, l, a1, x1, a2, x2):
 	"""
 	Parameters
 	----------
@@ -207,35 +207,7 @@ def shuffle(i, omega, l, a1, x1, a2, x2):
 
 	return i, omega
 
-def unshuffle(i, omega, l, a1, x1, a2, x2):
-	s1 = shuffling_sequence(a1, x1, l)
-	s2 = shuffling_sequence(a2, x2, l)
-
-	#Shuffling de columnas
-	i = numpy.array([[i[1] for i in sorted(zip(numpy.argsort(s1[0]), j), key = lambda x : x[0])] for j in i])
-	omega = numpy.array([[i[1] for i in sorted(zip(numpy.argsort(s1[1]), j), key = lambda x : x[0])] for j in omega])
-
-	#Shuffling de filas
-	i = numpy.array([i[1] for i in sorted(zip(numpy.argsort(s2[0]), i), key = lambda x : x[0])])
-	omega = numpy.array([i[1] for i in sorted(zip(numpy.argsort(s2[1]), i), key = lambda x : x[0])])
-
-	return i, omega
-
-def mask(i, omega, l, y):
-	p = 1
-
-	for j in range(l):
-		o = 1 + (omega.T[j].dot(numpy.array([numpy.product(i) for i in numpy.transpose(i, (1, 0, 2))])) % math.floor((l*l)/4))
-		numpy.roll(omega.T[j], -p)
-		p = 1 + math.floor(l*y[o])
-
-		for k in range(l):
-			i[k][j] = (i[k][j] + omega[j][k]) % 256
-
-
-	return i
-
-def block_shuffle(image, mask, omega, a1, x1, a2, x2):
+def shuffle_image(image, mask, omega, a1, x1, a2, x2):
 	"""
 	Parameters
 	----------
@@ -273,12 +245,83 @@ def block_shuffle(image, mask, omega, a1, x1, a2, x2):
 				res[j*s:(j+1)*s, i*s:(i+1)*s] = image[j*s:(j+1)*s, i*s:(i+1)*s]
 
 			else:
-				res[j*s:(j+1)*s, i*s:(i+1)*s] = shuffle(image[j*s:(j+1)*s, i*s:(i+1)*s], 
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = shuffle_block(image[j*s:(j+1)*s, i*s:(i+1)*s], 
 														omega, s, a1, x1, a2, x2)[0]
 
 	return res
 
-def block_unshuffle(image, mask, omega, a1, x1, a2, x2):
+def unshuffle_block(i, omega, l, a1, x1, a2, x2):
+	"""
+	Parameters
+	----------
+	i : numpy.ndarray
+		A shuffled block of an image.
+	omega : numpy.ndarray
+		The omega matrix used in the encryption algorithm.
+	l : int
+		The number of times the cat map transformation is iterated in the
+		shuffling sequence.
+	a1 : numpy.ndarray
+		A matrix used to compute the cat map transformation used in column
+		shuffling.
+	x1 : numpy.ndarray
+		A column vector on which the cat map transformation is applied used in
+		column shuffling.
+	a2 : numpy.ndarray
+		A matrix used to compute the cat map transformation used in row
+		shuffling.
+	x2 : numpy.ndarray
+		A column vector on which the cat map transformation is applied used in
+		row shuffling.
+	
+	Returns
+	-------
+	tuple
+		A tuple consisting of the result of unshuffling the given block and the
+		omega matrix.
+	"""
+	s1 = shuffling_sequence(a1, x1, l)
+	s2 = shuffling_sequence(a2, x2, l)
+
+	#Shuffling de columnas
+	i = numpy.array([[i[1] for i in sorted(zip(numpy.argsort(s1[0]), j), key = lambda x : x[0])] for j in i])
+	omega = numpy.array([[i[1] for i in sorted(zip(numpy.argsort(s1[1]), j), key = lambda x : x[0])] for j in omega])
+
+	#Shuffling de filas
+	i = numpy.array([i[1] for i in sorted(zip(numpy.argsort(s2[0]), i), key = lambda x : x[0])])
+	omega = numpy.array([i[1] for i in sorted(zip(numpy.argsort(s2[1]), i), key = lambda x : x[0])])
+
+	return i, omega
+
+def unshuffle_image(image, mask, omega, a1, x1, a2, x2):
+	"""
+	Parameters
+	----------
+	image : numpy.ndarray
+		A shuffled image.
+	mask : numpy.ndarray
+		The mask defining the region of interest of the image as computed by
+		divide_regions.
+	omega : numpy.ndarray
+		The omega matrix used in the encryption algorithm.
+	a1 : numpy.ndarray
+		A matrix used to compute the cat map transformation used in column
+		shuffling.
+	x1 : numpy.ndarray
+		A column vector on which the cat map transformation is applied used in
+		column shuffling.
+	a2 : numpy.ndarray
+		A matrix used to compute the cat map transformation used in row
+		shuffling.
+	x2 : numpy.ndarray
+		A column vector on which the cat map transformation is applied used in
+		row shuffling.
+	
+	Returns
+	-------
+	numpy.ndarray
+		The result of unshuffling the image.
+	"""
 	s = len(image) // len(mask)
 	res = numpy.zeros_like(image)
 
@@ -288,21 +331,68 @@ def block_unshuffle(image, mask, omega, a1, x1, a2, x2):
 				res[j*s:(j+1)*s, i*s:(i+1)*s] = image[j*s:(j+1)*s, i*s:(i+1)*s]
 
 			else:
-				res[j*s:(j+1)*s, i*s:(i+1)*s] = unshuffle(image[j*s:(j+1)*s, i*s:(i+1)*s], 
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = unshuffle_block(image[j*s:(j+1)*s, i*s:(i+1)*s], 
 														omega, s, a1, x1, a2, x2)[0]
 
 	return res
 
-def block_mask(image, _mask, omega, y):
-	s = len(image) // len(_mask)
+def mask_block(i, omega, l, y):
+	"""
+	Parameters
+	----------
+	i : numpy.ndarray
+		A block of an image.
+	omega : numpy.ndarray
+		The omega matrix used in the encryption algorithm.
+	l : int
+		The block lenght.
+	y : numpy.ndarray
+		The y matrix used in the encryption algorithm.
+	
+	Returns
+	-------
+	numpy.ndarray
+		The masked block.
+	"""
+	p = 1
+
+	for j in range(l):
+		o = 1 + (omega.T[j].dot(numpy.array([numpy.product(i) for i in numpy.transpose(i, (1, 0, 2))])) % math.floor((l*l)/4))
+		numpy.roll(omega.T[j], -p)
+		p = 1 + math.floor(l*y[o])
+
+		for k in range(l):
+			i[k][j] = (i[k][j] + omega[j][k]) % 256
+
+	return i
+
+def mask_image(image, mask, omega, y):
+	"""
+	Parameters
+	----------
+	image : numpy.ndarray
+		An image.
+	mask : numpy.ndarray
+		A two dimensional matrix indicating which blocks need to be masked.
+	omega : numpy.ndarray
+		The omega matrix used in the encryption algorithm.
+	y : numpy.ndarray
+		The y matrix used in the encryption algorithm.
+	
+	Returns
+	-------
+	numpy.ndarray
+		The masked image.
+	"""
+	s = len(image) // len(mask)
 	res = numpy.zeros_like(image)
 
-	for i in range(len(_mask[0])):
-		for j in range(len(_mask)):
-			if not _mask[j][i]:
+	for i in range(len(mask[0])):
+		for j in range(len(mask)):
+			if not mask[j][i]:
 				res[j*s:(j+1)*s, i*s:(i+1)*s] = image[j*s:(j+1)*s, i*s:(i+1)*s]
 
 			else:
-				res[j*s:(j+1)*s, i*s:(i+1)*s] = mask(image[j*s:(j+1)*s, i*s:(i+1)*s], omega, s, y)
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = mask_block(image[j*s:(j+1)*s, i*s:(i+1)*s], omega, s, y)
 
 	return res
