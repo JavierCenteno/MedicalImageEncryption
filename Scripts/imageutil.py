@@ -40,15 +40,47 @@ def save_image(image, path):
 	Image.fromarray(image, "RGB").save(path)
 
 def pad_image(image, block_size):
-	paddingH = len(image) % block_size
-	paddingW = len(image[0]) % block_size
+	"""
+	Parameters
+	----------
+	image : array_like
+		An image represented as a tridimensional array of the values of the
+		channels of its pixels that can be accessed by the x index, y index and
+		channel index of the value in that order.
+	block_size : int
+		A block size to pad this image for, to turn each dimension of this image
+		into the next highest multiple of this number.
+	
+	Returns
+	-------
+	array_like
+		The padded image.
+	"""
+	height_padding = len(image) % block_size
+	width_padding = len(image[0]) % block_size
 
-	paddingH = 0 if paddingH == 0 else block_size - paddingH
-	paddingW = 0 if paddingW == 0 else block_size - paddingW
+	height_padding = 0 if height_padding == 0 else block_size - height_padding
+	width_padding = 0 if width_padding == 0 else block_size - width_padding
 
-	return numpy.pad(image, ((0, paddingH), (0, paddingW), (0, 0)), 'constant'), image.shape
+	return numpy.pad(image, ((0, height_padding), (0, width_padding), (0, 0)), 'constant'), image.shape
 
 def unpad_image(image, shape):
+	"""
+	Parameters
+	----------
+	image : array_like
+		An image represented as a tridimensional array of the values of the
+		channels of its pixels that can be accessed by the x index, y index and
+		channel index of the value in that order.
+	shape : array_like
+		An array containing the new dimensions of this image.
+	
+	Returns
+	-------
+	array_like
+		The image with padding pixels removed to match the dimensions specified
+		by the shape parameter.
+	"""
 	return image[:shape[0], :shape[1]]
 
 def classification_metric(block, threshold):
