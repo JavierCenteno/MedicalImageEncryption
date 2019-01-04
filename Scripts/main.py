@@ -13,28 +13,18 @@ import imageutil
 import matrixutil
 import crypto
 
-block_size = 20
+#Parámetros
+image = imageutil.load_image("../Test/mri3.jpg")
 
-image = imageutil.load_image("../Test/mri1.jpg")
-mask = imageutil.divide_regions(image, block_size, 3)
-imageutil.save_image(mask, "../Test/mask.png")
+a = (crypto.a_matrix(2, 1, 2, 2), matrixutil.vector(0.6, 0.2, 0.8, 0.6).T)
+cm1 = (crypto.cat_map(2, 1), matrixutil.vector(0.9, 0.72).T)
+cm2 = (crypto.cat_map(3, 2), matrixutil.vector(0.235, 0.821).T)
+block_size = 35
+std_limit = 3
 
-a = crypto.a_matrix(2, 1, 2, 2)
-n = [block_size, block_size]
+#Algoritmo
+cypheredImage, mask, shape = crypto.cypher_image(image, *a, *cm1, *cm2, block_size, std_limit)
+decypheredImage = crypto.decypher_image(cypheredImage, mask, shape, *a, *cm1, *cm2, block_size)
 
-omega, y = crypto.omega_matrix(a, matrixutil.vector(0.6, 0.2, 0.8, 0.6).T, *n)
-
-shuffled_image = crypto.shuffle_image(image, mask, omega,
-						crypto.cat_map(2, 1), matrixutil.vector(0.9, 0.72).T, 
-						crypto.cat_map(3, 2), matrixutil.vector(0.235, 0.821).T)
-
-unshuffled_image = crypto.unshuffle_image(shuffled_image, mask, omega,
-						crypto.cat_map(2, 1), matrixutil.vector(0.9, 0.72).T, 
-						crypto.cat_map(3, 2), matrixutil.vector(0.235, 0.821).T)
-
-imageutil.save_image(shuffled_image, "../Test/shuffled_image.png")
-imageutil.save_image(unshuffled_image, "../Test/unshuffled_image.png")
-
-masked_image = crypto.mask_image(shuffled_image, mask, omega, y)
-
-imageutil.save_image(masked_image, "../Test/masked_image.png")
+imageutil.save_image(cypheredImage, "../Test/process/cyphered_image.png")
+imageutil.save_image(decypheredImage, "../Test/process/decyphered_image.png")

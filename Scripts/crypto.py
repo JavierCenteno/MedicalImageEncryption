@@ -16,6 +16,8 @@ import math
 from matrixutil import vector
 from byteutil import to_bytes
 
+import imageutil
+
 def a_matrix(a, b, c, d):
 	"""
 	Parameters
@@ -396,3 +398,61 @@ def mask_image(image, mask, omega, y):
 				res[j*s:(j+1)*s, i*s:(i+1)*s] = mask_block(image[j*s:(j+1)*s, i*s:(i+1)*s], omega, s, y)
 
 	return res
+
+def unmask_block(i, omega, l, y):
+	for j in reversed(range(l)):
+		for k in range(l):
+			i[k][j] = (i[k][j] - omega[j][k]) % 256
+
+	return i
+
+def unmask_image(image, mask, omega, y):
+	"""
+	Parameters
+	----------
+	image : numpy.ndarray
+		An image.
+	mask : numpy.ndarray
+		A two dimensional matrix indicating which blocks need to be masked.
+	omega : numpy.ndarray
+		The omega matrix used in the encryption algorithm.
+	y : numpy.ndarray
+		The y matrix used in the encryption algorithm.
+	
+	Returns
+	-------
+	numpy.ndarray
+		The masked image.
+	"""
+	s = len(image) // len(mask)
+	res = numpy.zeros_like(image)
+
+	for i in range(len(mask[0])):
+		for j in range(len(mask)):
+			if not mask[j][i]:
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = image[j*s:(j+1)*s, i*s:(i+1)*s]
+
+			else:
+				res[j*s:(j+1)*s, i*s:(i+1)*s] = unmask_block(image[j*s:(j+1)*s, i*s:(i+1)*s], omega, s, y)
+
+	return res
+
+def cypher_image(image, a_matrix, a_vector, cat_map1, cat_map1_init, cat_map2, cat_map2_init, block_size, std_limit):
+	omega, y = omega_matrix(a_matrix, a_vector, block_size, block_size)
+
+	paddedImage, shape = imageutil.pad_image(image, block_size)
+
+	mask = imageutil.divide_regions(paddedImage, block_size, std_limit)
+
+	shuffled_image = shuffle_image(paddedImage.copy(), mask, omega, cat_map1, cat_map1_init, cat_map2, cat_map2_init)
+	masked_image = mask_image(shuffled_image.copy(), mask, omega, y)
+
+	return masked_image, mask, shape
+
+def decypher_image(image, mask, shape, a_matrix, a_vector, cat_map1, cat_map1_init, cat_map2, cat_map2_init, block_size):
+	omega, y = omega_matrix(a_matrix, a_vector, block_size, block_size)
+
+	unmasked_image = unmask_image(image.copy(), mask, omega, y)
+	unshuffled_image = unshuffle_image(unmasked_image.copy(), mask, omega, cat_map1, cat_map1_init, cat_map2, cat_map2_init)
+
+	return imageutil.unpad_image(unshuffled_image, shape)

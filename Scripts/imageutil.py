@@ -39,6 +39,18 @@ def save_image(image, path):
 	"""
 	Image.fromarray(image, "RGB").save(path)
 
+def pad_image(image, block_size):
+	paddingH = len(image) % block_size
+	paddingW = len(image[0]) % block_size
+
+	paddingH = 0 if paddingH == 0 else block_size - paddingH
+	paddingW = 0 if paddingW == 0 else block_size - paddingW
+
+	return numpy.pad(image, ((0, paddingH), (0, paddingW), (0, 0)), 'constant'), image.shape
+
+def unpad_image(image, shape):
+	return image[:shape[0], :shape[1]]
+
 def classification_metric(block, threshold):
 	"""
 	Parameters
